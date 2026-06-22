@@ -1,0 +1,22 @@
+idf_component_register(
+    SRCS
+        "edge_node.c"
+        "lora_protocol.c"
+        "calibration.c"
+    INCLUDE_DIRS
+        "."
+    REQUIRES
+        sx1278
+        bme680_bsec
+        bme280
+        pms7003
+        power_manager
+        sleep_manager
+        nvs_config
+        sd_logger
+        ds2782
+        nvs_flash
+        driver
+        esp_timer
+        freertos
+)

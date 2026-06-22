@@ -1,0 +1,10 @@
+idf_component_register(
+    SRCS
+        "src/ds2782.c"
+    INCLUDE_DIRS
+        "inc"
+    REQUIRES
+        driver
+        freertos
+        log
+)

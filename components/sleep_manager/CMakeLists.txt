@@ -1,0 +1,11 @@
+idf_component_register(
+    SRCS
+        "src/sleep_manager.c"
+    INCLUDE_DIRS
+        "inc"
+    REQUIRES
+        power_manager
+        driver
+        freertos
+        log
+)

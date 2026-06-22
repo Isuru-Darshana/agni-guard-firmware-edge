@@ -1,0 +1,27 @@
+# ESP-IDF build output — never commit this
+build/
+
+# SDK config generated files
+sdkconfig
+sdkconfig.old
+
+# VS Code settings (optional — remove if you want to share)
+.vscode/
+
+# Python cache
+__pycache__/
+*.pyc
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Compiled objects
+*.o
+*.a
+*.elf
+*.bin
+*.map
+
+# Exception: keep the BSEC2 binary we need
+!components/bme680_bsec/lib/libalgobsec.a

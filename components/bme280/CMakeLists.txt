@@ -1,0 +1,9 @@
+idf_component_register(
+    SRCS
+        "src/bme280.c"
+    INCLUDE_DIRS
+        "inc"
+    REQUIRES
+        driver
+        log
+)

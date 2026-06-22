@@ -1,0 +1,14 @@
+idf_component_register(
+    SRCS
+        "src/sd_logger.c"
+    INCLUDE_DIRS
+        "inc"
+    REQUIRES
+        driver
+        fatfs
+        sdmmc
+        log
+        sleep_manager
+        bme280
+        pms7003
+)

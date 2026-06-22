@@ -1,0 +1,9 @@
+idf_component_register(
+    SRCS
+        "src/nvs_config.c"
+    INCLUDE_DIRS
+        "inc"
+    REQUIRES
+        nvs_flash
+        log
+)

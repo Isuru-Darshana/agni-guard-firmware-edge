@@ -1,0 +1,10 @@
+idf_component_register(
+    SRCS
+        "src/sx1278.c"
+    INCLUDE_DIRS
+        "inc"
+    REQUIRES
+        driver
+        freertos
+        log
+)
