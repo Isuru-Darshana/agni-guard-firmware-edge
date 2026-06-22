@@ -53,10 +53,10 @@ Received in ACK from gateway. Controls sleep interval.
 
 | Stage | Value | Sleep interval |
 |-------|-------|----------------|
-| `STAGE_NORMAL` | 0 | 1 min |
-| `STAGE_ALERT` | 1 | 4 min |
-| `STAGE_ELEVATED` | 2 | 3 min |
-| `STAGE_CRITICAL` | 3 | 2 min |
+| `STAGE_NORMAL` | 0 | 15 min |
+| `STAGE_ALERT` | 1 | 10 min |
+| `STAGE_ELEVATED` | 2 | 7 min |
+| `STAGE_CRITICAL` | 3 | 5 min |
 | `STAGE_RAIN` | 4 | 60 min |
 
 ---
