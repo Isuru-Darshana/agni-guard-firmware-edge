@@ -1,1 +1,0 @@
-# agni-guard-firmware
