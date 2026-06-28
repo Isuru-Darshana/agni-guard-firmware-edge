@@ -12,7 +12,7 @@
 
 static const char *TAG = "SLEEP";
 
-const uint8_t SLEEP_MINUTES[] = {1, 4, 3, 2, 60};
+const uint8_t SLEEP_MINUTES[] = {2, 2, 2, 2, 5};
 const char*   STAGE_NAMES[]   = {"NORMAL", "ALERT", "ELEVATED", "CRITICAL", "RAIN"};
 
 // ============================================================
@@ -23,8 +23,6 @@ RTC_DATA_ATTR bool         g_calibration_done = false;
 RTC_DATA_ATTR float        g_gas_baseline     = 0.0f;
 RTC_DATA_ATTR fire_stage_t g_current_stage    = STAGE_NORMAL;
 RTC_DATA_ATTR uint16_t     g_sequence_number  = 0;
-RTC_DATA_ATTR float        g_cal_sum          = 0.0f;
-RTC_DATA_ATTR uint32_t     g_cal_count        = 0;
 
 void sleep_manager_init(void) {
     power_manager_release_pins();
@@ -46,8 +44,6 @@ void sleep_manager_init(void) {
         g_gas_baseline     = 0.0f;
         g_current_stage    = STAGE_NORMAL;
         g_sequence_number  = 0;
-        g_cal_sum          = 0.0f;
-        g_cal_count        = 0;
     }
 }
 

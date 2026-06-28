@@ -17,10 +17,9 @@ typedef struct {
     float    humidity;         // %RH
     float    pressure;         // hPa
     float    gas_resistance;   // kΩ raw gas resistance
-    bool     gas_valid;        // true = gas measurement stable (heater warm)
-    int64_t  timestamp_ns;
+    bool     gas_valid;        // true = heater cycle complete
 } bme680_data_t;
 
 // ── API ───────────────────────────────────────────────────────
-esp_err_t bme680_bsec_init(void);
-esp_err_t bme680_bsec_read(bme680_data_t *data);
+esp_err_t bme680_init(void);
+esp_err_t bme680_read(bme680_data_t *data);

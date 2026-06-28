@@ -2,7 +2,6 @@ idf_component_register(
     SRCS
         "edge_node.c"
         "lora_protocol.c"
-        "calibration.c"
     INCLUDE_DIRS
         "."
     REQUIRES

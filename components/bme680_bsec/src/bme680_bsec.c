@@ -12,7 +12,7 @@ static struct bme68x_dev bme680_dev;
 static i2c_port_t        i2c_port = BME680_I2C_PORT;
 
 // ── Init ─────────────────────────────────────────────────────
-esp_err_t bme680_bsec_init(void) {
+esp_err_t bme680_init(void) {
     bme680_dev.intf     = BME68X_I2C_INTF;
     bme680_dev.read     = bme68x_i2c_read;
     bme680_dev.write    = bme68x_i2c_write;
@@ -31,7 +31,7 @@ esp_err_t bme680_bsec_init(void) {
 }
 
 // ── Read — forced mode, 320°C heater 150ms ───────────────────
-esp_err_t bme680_bsec_read(bme680_data_t *data) {
+esp_err_t bme680_read(bme680_data_t *data) {
     memset(data, 0, sizeof(bme680_data_t));
 
     struct bme68x_conf conf = {
