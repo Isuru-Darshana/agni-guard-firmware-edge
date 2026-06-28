@@ -38,7 +38,20 @@ typedef struct {
     fire_stage_t   stage;
 } sd_log_entry_t;
 
+typedef struct {
+    uint32_t boot;
+    uint16_t seq;
+    uint8_t  node_id;
+    uint32_t reading_num;
+    uint32_t total_readings;
+    float    gas_resistance;
+    float    temperature;
+    float    humidity;
+    float    pressure;
+    float    running_mean;
+} sd_cal_entry_t;
+
 esp_err_t sd_logger_init(void);
-esp_err_t sd_logger_write(const sd_log_entry_t *entry,
-                           uint8_t node_id);
+esp_err_t sd_logger_write(const sd_log_entry_t *entry, uint8_t node_id);
+esp_err_t sd_logger_write_cal(const sd_cal_entry_t *entry, uint8_t node_id);
 void      sd_logger_deinit(void);

@@ -23,6 +23,8 @@ RTC_DATA_ATTR bool         g_calibration_done = false;
 RTC_DATA_ATTR float        g_gas_baseline     = 0.0f;
 RTC_DATA_ATTR fire_stage_t g_current_stage    = STAGE_NORMAL;
 RTC_DATA_ATTR uint16_t     g_sequence_number  = 0;
+RTC_DATA_ATTR float        g_cal_sum          = 0.0f;
+RTC_DATA_ATTR uint32_t     g_cal_count        = 0;
 
 void sleep_manager_init(void) {
     power_manager_release_pins();
@@ -44,6 +46,8 @@ void sleep_manager_init(void) {
         g_gas_baseline     = 0.0f;
         g_current_stage    = STAGE_NORMAL;
         g_sequence_number  = 0;
+        g_cal_sum          = 0.0f;
+        g_cal_count        = 0;
     }
 }
 
@@ -82,10 +86,12 @@ void sleep_manager_enter_deep_sleep_with_soc(fire_stage_t stage,
     uint8_t  minutes;
     uint64_t sleep_us;
 
-    if (soc <= BATTERY_CRIT_SOC) {
-        minutes = 30;
-        ESP_LOGW(TAG, "Battery CRITICAL (%d%%) — forced 30min sleep", soc);
-    } else if (soc <= BATTERY_LOW_SOC) {
+    // TODO: re-enable critical battery sleep when power management is stable
+    // if (soc <= BATTERY_CRIT_SOC) {
+    //     minutes = 30;
+    //     ESP_LOGW(TAG, "Battery CRITICAL (%d%%) — forced 30min sleep", soc);
+    // } else
+    if (soc <= BATTERY_LOW_SOC) {
         uint8_t normal = SLEEP_MINUTES[stage];
         minutes = (normal < 10) ? 10 : normal;
         ESP_LOGW(TAG, "Battery LOW (%d%%) — extending sleep to %dmin",

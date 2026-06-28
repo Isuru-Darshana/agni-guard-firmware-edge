@@ -5,32 +5,32 @@
 #include "sx1278.h"
 #include <stdint.h>
 
-#define PKT_TYPE_DATA 'D'
-#define PKT_TYPE_ACK  'A'
+#define PKT_TYPE_DATA  'D'
+#define PKT_TYPE_ACK   'A'
 #define ACK_TIMEOUT_MS 30000
 
 typedef struct {
-    // BME680 data (placeholder until BSEC integrated)
+    // BME680 — heat compensated + raw gas
     float    bme680_temp;
     float    bme680_humidity;
     float    bme680_pressure;
-    float    bme680_gas;        // raw gas resistance kΩ
+    float    bme680_gas;       // kΩ raw gas resistance
 
-    // BME280 data
+    // BME280
     float    bme280_temp;
     float    bme280_humidity;
     float    bme280_pressure;
 
-    // PMS7003 data
+    // PMS7003
     uint16_t pm2_5;
     uint16_t pm10;
 
-    // Battery — DS2782
-    uint8_t  battery_soc;       // % from RARC or voltage curve
-    float    battery_voltage;   // V pack total (cell1 + cell2)
+    // Battery
+    uint8_t  battery_soc;
+    float    battery_voltage;
 
     // Calibration
-    float    gas_baseline;      // kΩ from NVS
+    float    gas_baseline;
     uint16_t sequence;
 } lora_packet_t;
 

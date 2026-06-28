@@ -6,6 +6,7 @@
 #include "sdmmc_cmd.h"
 #include <stdio.h>
 #include <string.h>
+#include <errno.h>
 
 static const char    *TAG    = "SD";
 static const char    *MOUNT  = "/sdcard";
@@ -75,7 +76,8 @@ esp_err_t sd_logger_write(const sd_log_entry_t *entry,
 
     f = fopen(path, "a");
     if (!f) {
-        ESP_LOGE(TAG, "Cannot open %s", path);
+        ESP_LOGE(TAG, "Cannot open %s (errno=%d: %s)",
+                 path, errno, strerror(errno));
         return ESP_FAIL;
     }
 
@@ -116,6 +118,55 @@ esp_err_t sd_logger_write(const sd_log_entry_t *entry,
 
     fclose(f);
     ESP_LOGI(TAG, "Logged → %s", path);
+    return ESP_OK;
+}
+
+esp_err_t sd_logger_write_cal(const sd_cal_entry_t *entry,
+                               uint8_t node_id) {
+    if (!mounted) {
+        ESP_LOGW(TAG, "SD not mounted");
+        return ESP_ERR_INVALID_STATE;
+    }
+
+    char path[64];
+    snprintf(path, sizeof(path), "%s/cal_node%d.csv", MOUNT, node_id);
+
+    FILE *f = fopen(path, "r");
+    bool need_header = (f == NULL);
+    if (f) fclose(f);
+
+    f = fopen(path, "a");
+    if (!f) {
+        ESP_LOGE(TAG, "Cannot open %s (errno=%d: %s)",
+                 path, errno, strerror(errno));
+        return ESP_FAIL;
+    }
+
+    if (need_header) {
+        fprintf(f,
+            "Boot,Seq,Reading,Total,"
+            "Gas_kOhm,Temp,Humidity,Pressure,RunningMean\n");
+    }
+
+    fprintf(f,
+        "%lu,%d,%lu,%lu,"
+        "%.2f,%.2f,%.2f,%.2f,%.2f\n",
+        (unsigned long)entry->boot,
+        entry->seq,
+        (unsigned long)entry->reading_num,
+        (unsigned long)entry->total_readings,
+        entry->gas_resistance,
+        entry->temperature,
+        entry->humidity,
+        entry->pressure,
+        entry->running_mean);
+
+    fclose(f);
+    ESP_LOGI(TAG, "Cal [%lu/%lu] %.2f kΩ  mean=%.2f kΩ → %s",
+             (unsigned long)entry->reading_num,
+             (unsigned long)entry->total_readings,
+             entry->gas_resistance,
+             entry->running_mean, path);
     return ESP_OK;
 }
 

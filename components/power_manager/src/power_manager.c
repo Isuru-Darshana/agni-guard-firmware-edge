@@ -31,7 +31,7 @@ esp_err_t power_manager_init(void) {
     // Start with everything OFF
     gpio_set_level(PIN_BME680_EN, 0);
     gpio_set_level(PIN_BME280_EN, 0);
-    gpio_set_level(PIN_SD_EN, 1);  // HIGH = OFF for P-MOSFET
+    gpio_set_level(PIN_SD_EN,     1);  // HIGH = OFF for P-MOSFET
 
     ESP_LOGI(TAG, "Power manager init OK — all sensors OFF");
     return ESP_OK;

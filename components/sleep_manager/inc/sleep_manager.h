@@ -18,6 +18,10 @@ typedef enum {
 #define BATTERY_LOW_SOC   10   // % — extend sleep
 #define BATTERY_CRIT_SOC   5   // % — maximum sleep
 
+// Calibration: change CALIBRATION_HOURS to 12 for research deployment
+#define CALIBRATION_HOURS    1
+#define CALIBRATION_READINGS (CALIBRATION_HOURS * 60)
+
 extern const uint8_t SLEEP_MINUTES[];
 extern const char*   STAGE_NAMES[];
 
@@ -27,6 +31,8 @@ extern bool         g_calibration_done;
 extern float        g_gas_baseline;
 extern fire_stage_t g_current_stage;
 extern uint16_t     g_sequence_number;
+extern float        g_cal_sum;
+extern uint32_t     g_cal_count;
 
 void         sleep_manager_init(void);
 void         sleep_manager_enter_deep_sleep(fire_stage_t stage);

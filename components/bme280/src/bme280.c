@@ -46,11 +46,16 @@ static esp_err_t bme280_read_reg(uint8_t reg, uint8_t *data, size_t len) {
 
 // ── Compensation coefficients read ─────────────────────────
 // Per datasheet Table 16 section 4.2.2
-static void bme280_read_compensation(void) {
-    uint8_t buf[24];
+static esp_err_t bme280_read_compensation(void) {
+    uint8_t buf[24] = {0};
 
     // Temperature + pressure: 0x88 to 0x9F (24 bytes)
-    bme280_read_reg(0x88, buf, 24);
+    esp_err_t ret = bme280_read_reg(0x88, buf, 24);
+    if (ret != ESP_OK) {
+        ESP_LOGE(TAG, "T/P calibration read failed: %s",
+                 esp_err_to_name(ret));
+        return ret;
+    }
     dig_T1 = (uint16_t)((buf[1]  << 8) | buf[0]);
     dig_T2 = (int16_t) ((buf[3]  << 8) | buf[2]);
     dig_T3 = (int16_t) ((buf[5]  << 8) | buf[4]);
@@ -64,11 +69,14 @@ static void bme280_read_compensation(void) {
     dig_P8 = (int16_t) ((buf[21] << 8) | buf[20]);
     dig_P9 = (int16_t) ((buf[23] << 8) | buf[22]);
 
+    ESP_LOGI(TAG, "Calib: T1=%u T2=%d T3=%d",
+             dig_T1, dig_T2, dig_T3);
+
     // dig_H1 at 0xA1 (separate from main block per Table 16)
     bme280_read_reg(0xA1, &dig_H1, 1);
 
     // Humidity: 0xE1 to 0xE7 (7 bytes)
-    uint8_t hbuf[7];
+    uint8_t hbuf[7] = {0};
     bme280_read_reg(0xE1, hbuf, 7);
 
     dig_H2 = (int16_t)((hbuf[1] << 8) | hbuf[0]);         // 0xE2/0xE1
@@ -82,6 +90,7 @@ static void bme280_read_compensation(void) {
     dig_H5 = (int16_t)(((int8_t)hbuf[5] << 4) | (hbuf[4] >> 4));
 
     dig_H6 = (int8_t)hbuf[6];                              // 0xE7
+    return ESP_OK;
 }
 
 // ── Bosch compensation formulas (from datasheet section 4.2.3) ─
@@ -113,13 +122,16 @@ static float compensate_pressure(int32_t adc_P) {
 }
 
 static float compensate_humidity(int32_t adc_H) {
+    // Datasheet s4.2.3: one expression — original v (t_fine-76800) used
+    // throughout RHS for dig_H5, dig_H6, dig_H3.  Save before overwriting.
+    // Precedence trap: x * EXPR >> 14 = (x*EXPR)>>14 — overflows int32.
+    // Must be x * (EXPR >> 14) per datasheet parenthesisation.
     int32_t v = t_fine - 76800;
-    v = (((adc_H << 14) - ((int32_t)dig_H4 << 20) -
-          ((int32_t)dig_H5 * v)) + 16384) >> 15;
-    v = v * (((((v * (int32_t)dig_H6) >> 10) *
-               (((v * (int32_t)dig_H3) >> 11) + 32768)) >> 10) + 2097152);
-    v = ((v + 8192) >> 14);
-    // Clamp per datasheet
+    int32_t x = (((adc_H << 14) - ((int32_t)dig_H4 << 20) -
+                   ((int32_t)dig_H5 * v)) + 16384) >> 15;
+    v = x * (((((((v * (int32_t)dig_H6) >> 10) *
+                 (((v * (int32_t)dig_H3) >> 11) + 32768)) >> 10) +
+                2097152) * (int32_t)dig_H2 + 8192) >> 14);
     v -= ((((v >> 15) * (v >> 15)) >> 7) * (int32_t)dig_H1) >> 4;
     if (v < 0)         v = 0;
     if (v > 419430400) v = 419430400;
@@ -128,18 +140,7 @@ static float compensate_humidity(int32_t adc_H) {
 
 // ── Init ───────────────────────────────────────────────────
 esp_err_t bme280_init(void) {
-    // I2C bus config — I2C_NUM_0, GPIO8/9 per your PCB
-    i2c_config_t conf = {
-        .mode             = I2C_MODE_MASTER,
-        .sda_io_num       = BME280_SDA_PIN,
-        .scl_io_num       = BME280_SCL_PIN,
-        .sda_pullup_en    = GPIO_PULLUP_ENABLE,
-        .scl_pullup_en    = GPIO_PULLUP_ENABLE,
-        .master.clk_speed = BME280_I2C_FREQ,
-    };
-    i2c_param_config(BME280_I2C_PORT, &conf);
-    i2c_driver_install(BME280_I2C_PORT, I2C_MODE_MASTER, 0, 0, 0);
-
+    // I2C bus already configured by i2c_buses_init() in edge_node.c
     // Wait for sensor startup (datasheet: 2ms after power on)
     vTaskDelay(pdMS_TO_TICKS(5));
 
@@ -151,12 +152,17 @@ esp_err_t bme280_init(void) {
         return ESP_FAIL;
     }
 
-    // Soft reset (datasheet section 5.4.2 — write 0xB6 to 0xE0)
-    bme280_write_reg(0xE0, 0xB6);
-    vTaskDelay(pdMS_TO_TICKS(5));
+    // No soft reset — device just powered on, already in clean state.
+    // Issuing soft reset causes the BME280 to NACK the data byte mid-write
+    // (it resets before ACKing), which can leave the I2C bus dirty and
+    // cause the compensation register read to fail silently.
 
     // Read compensation coefficients
-    bme280_read_compensation();
+    ret = bme280_read_compensation();
+    if (ret != ESP_OK) {
+        ESP_LOGE(TAG, "Compensation read failed");
+        return ret;
+    }
 
     // Config register 0xF5: no IIR filter, no SPI 3-wire
     // filter[2:0] = 000 (filter off), t_sb irrelevant in forced mode

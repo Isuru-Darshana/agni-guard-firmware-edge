@@ -257,13 +257,15 @@ esp_err_t sx1278_receive(sx1278_t *dev,
                      MODE_LONG_RANGE_MODE | MODE_RX_CONTINUOUS);
 
     // Wait for RxDone on DIO0
+    // vTaskDelay(1) guarantees ≥1 FreeRTOS tick regardless of configTICK_RATE_HZ,
+    // which lets IDLE0 run and reset the task watchdog.
     uint32_t start = xTaskGetTickCount();
     while (!gpio_get_level(dev->pin_dio0)) {
         if ((xTaskGetTickCount() - start) > pdMS_TO_TICKS(timeout_ms)) {
             sx1278_standby(dev);
             return ESP_ERR_TIMEOUT;
         }
-        vTaskDelay(pdMS_TO_TICKS(1));
+        vTaskDelay(1);
     }
 
     // Read IRQ flags
